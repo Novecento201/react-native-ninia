@@ -1,37 +1,104 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { AddTodo } from '@/components/ui/AddTodo';
+import { Header } from '@/components/ui/Header';
+import { Sandbox } from '@/components/ui/Sandbox';
+import { TodoItem } from '@/components/ui/TodoItem';
+import { useState } from 'react';
+import {
+  Alert,
+  Button,
+  FlatList,
+  Keyboard,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+export const _layout = () => {
+  const [todos, setTodos] = useState([
+    { id: 1, name: 'Buy milk' },
+    { id: 2, name: 'Buy eggs' },
+    { id: 3, name: 'Buy bread' },
+  ]);
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+  const handlePressTodo = (id: number) => {
+    setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+  };
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  const submitTodo = (name: string) => {
+    // if (name === '') return alert('Please enter a todo');
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    if (name.length > 3) {
+      setTodos((prevTodos) => [
+        ...prevTodos,
+        { id: prevTodos.length + 1, name },
+      ]);
+    } else {
+      Alert.alert('Title alert', 'Todo must be over 3 characters long', [
+        {
+          text: 'Understood',
+          onPress: () => console.log('alert closed'),
+        },
+        {
+          text: 'Cancel',
+          onPress: () => console.log('alert closed'),
+        },
+      ]);
     }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
+  };
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <View style={styles.container}>
+        <Header />
+
+        <View style={styles.content}>
+          <AddTodo submitTodo={submitTodo} />
+
+          <View style={styles.list}>
+            <FlatList
+              data={todos}
+              renderItem={({ item }) => (
+                <TodoItem
+                  todo={item}
+                  action={() => handlePressTodo(item.id)}
+                />
+              )}
+            />
+          </View>
+        </View>
+      </View>
+    </TouchableWithoutFeedback>
   );
-}
+};
+
+export default _layout;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+    gap: 20,
+  },
+
+  text: {
+    fontSize: 20,
+    color: 'white',
+  },
+
+  content: {
+    width: '90%',
+    flex: 1,
+    padding: 20,
+  },
+
+  list: {
+    flex: 1,
+    marginTop: 20,
+  },
+});
